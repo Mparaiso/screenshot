@@ -68,6 +68,7 @@ class CaptureService
 ### configuration ###
 
 c = new Pimple
+  debug: if process.env.NODE_ENV is "production" then false else true
   tempDir: path.join(__dirname, 'temp')
   rasterizeScript: path.join(__dirname, 'scripts', 'rasterize-url.js')
   defaultOutputFile: path.join(__dirname, 'temp', 'image.jpg')
@@ -111,10 +112,11 @@ c.set 'uploader', c.share (c)->
   new FreeImageUploader(c.q, c['form-data'], c.fs, c.remoteScriptUrl, c.remoteScriptToken)
 
 c.set 'redisClient', c.share (c)->
-  #redis = require("redis")
-  #client = redis.createClient(13772, 'pub-redis-13772.eu-west-1-1.2.ec2.garantiadata.com', {auth_pass: 'defender'})
-  #return client
-  c.captureJobQueue.redisClient
+  if c.debug
+    redis = require("redis")
+    client = redis.createClient(13772, 'pub-redis-13772.eu-west-1-1.2.ec2.garantiadata.com', {auth_pass: 'defender'})
+    return client
+  else c.captureJobQueue.redisClient
 
 c.set 'md5', c.share (c)->
   (string)->
@@ -134,7 +136,7 @@ c.set 'app', c.share (c)->
   q}=c
   app = express()
   app.use(express.bodyParser())
-  app.use(express.logger())
+  app.use(express.logger("debug"))
   app.get '/', (req, res, next)->
     if not req.query.url then next() else
       Capture.getCaptureByUrl(req.query.url)
