@@ -14,7 +14,7 @@
         "coffee-script": "1.x",
         "q": "1.x",
         "form-data": "0.1.x",
-        "redis-dist-job-queue": "0.0.x"
+        "redis-dist-job-queue": "mpmedia/node-redis-dist-job-queue"
     },
     "devDependencies": {
         "supervisor": "*"
