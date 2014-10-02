@@ -129,16 +129,14 @@ c = new Pimple
 
 c.set 'captureJobQueue', c.share (c)->
     JobQueue = require 'redis-dist-job-queue'
-    captureQueue = new JobQueue
+    captureJobQueue = new JobQueue
         flushStaleTimeout: 50000
         redisConfig:
             host: c.redis_host
             port: c.redis_port
             auth_pass: c.redis_password
-    captureQueue.registerTask('./captureJobQueue')
-    captureQueue.on 'error', (err)->
-        console.log('captureQueue error', err,err.stack)
-    return captureQueue
+    captureJobQueue.registerTask('./captureJobQueue')
+    return captureJobQueue
 
 c.set 'rasterizer', c.share (c)->
     new Rasterizer(c.q,c.fs,c.child_process,c.phantomjs,c.rasterizeScript,c.defaultOutputFile)
