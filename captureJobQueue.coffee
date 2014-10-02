@@ -25,4 +25,4 @@ module.exports =
                 return r
         .then -> Capture.createFromUrl(params.url)
         .then -> cb()
-        .catch cb
+        .catch (err)-> cb(err)
