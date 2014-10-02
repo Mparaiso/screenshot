@@ -83,7 +83,7 @@ c = new Pimple
     redis_password: process.env.SCREENSHOT_REDISPASSWORD
     defaultImageFile: process.env.SCREENSHOT_DEFAULT_IMAGE_URL
     CAPTURE_TASK_ID: 'captureUrlTask'
-    port: process.env.PORT || process.env.NODE_POST || 3000
+    port: process.env.PORT || process.env.NODE_POST || 4000
     error:error
 
 
@@ -149,19 +149,22 @@ c.set 'app', c.share (c)->
     app.use(express.bodyParser())
     app.use(express.logger("debug"))
     app.get '/', (req, res, next)->
-        if not req.query.url then next() else
+        if not req.query.url
+            do next
+        else
             Capture.getCaptureByUrl(req.query.url)
             .then (capture)->
-                    if capture
-                        res.redirect(301, cdnUrl + "#{capture.id}.#{imageExtension}")
-                    else
-                        res.redirect(defaultImageFile)
-                        q.ninvoke(captureJobQueue, 'submitJob', CAPTURE_TASK_ID, {params: {url: req.query.url}}, (err)->
-                            console.log('task result',arguments)
-                        )
+                if capture
+                    res.redirect(301, cdnUrl + "#{capture.id}.#{imageExtension}")
+                else
+                    res.redirect(defaultImageFile)
+                    q.ninvoke captureJobQueue, 'submitJob', CAPTURE_TASK_ID, {params: {url: req.query.url}}, (err)->
+                        console.log('task result',arguments)
             .catch (err)->
-                    err.status = 500
-                    next(err)
+                err.status = 500
+                console.log(err)
+                next(err)
+
 
     app.get '/', (req, res, next)->
         res.send('screenshot')
