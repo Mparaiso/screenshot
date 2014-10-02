@@ -27,9 +27,14 @@ class Rasterizer extends RasterizerInterface
     rasterize:(url, outputFile = @defaultOutputFile, width = 320, height = 240)->
         cmd = [@phantomjs.path, @rasterizeScript, '"'+url+'"', outputFile, width, height]
         @q.ninvoke(@child_process, 'exec', cmd.join(' '))
-        .then -> @q.ninvoke(@fs,'exists',outputFile)
-        .then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}." else file_exists
-
+        .then => @fileExists(outputFile)
+        #.then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}." else file_exists
+    fileExists:(filepath)->
+        deferred = @q.defer()
+        @fs.exists(filepath,(exists)->
+            if exists then deferred.resolve(exists) else deferred.reject("#{filepath} doesnt exist")
+        )
+        deferred.promise
 class ImageUploaderInterface
 
     ###
@@ -181,6 +186,7 @@ c.set 'app', c.share (c)->
                     captureJobQueue.submitJob CAPTURE_TASK_ID,
                         resourceId:req.query.url,
                         params: {url: req.query.url}
+                    ,->
 
             .catch (err)->
                 err.status = 500
