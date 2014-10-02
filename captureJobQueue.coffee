@@ -15,6 +15,7 @@ module.exports =
         id = md5(params.url)
         filename = id + '.' + imageExtension
         filePath = path.join tempDir, filename
+        console.log('rasterizing ',filePath)
         rasterizer.rasterize(params.url, filePath)
         .then ->
             console.log('upload file', filePath);
@@ -25,4 +26,4 @@ module.exports =
                 return r
         .then -> Capture.createFromUrl(params.url)
         .then -> cb()
-        .catch (err)-> cb(err)
+        .catch (err)-> console.log('error',err);cb(err)
