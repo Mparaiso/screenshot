@@ -1,7 +1,34 @@
 Pimple = require 'pimple'
 path = require 'path'
 
+
 ### classes ###
+class RasterizerInterface
+    rasterize:(url,outputFilePath,width,height)->
+        throw "must be overloaded"
+
+
+class Rasterizer extends RasterizerInterface
+
+    ###
+        @param Object q q module
+        @param Object fs fs module
+        @param Object child_process child_process module
+        @param Object phantomjs phantomjs module
+        @param Object rasterizeScript rasterizeScript
+        @param Object defaultOutputFile defaultOutputFile
+    ###
+    constructor:(@q,@fs,@child_process,@phantomjs,@rasterizeScript,@defaultOutputFile)->
+
+    ###
+        rasterize url
+        @return Promise
+    ###
+    rasterize:(url, outputFile = @defaultOutputFile, width = 320, height = 240)->
+        cmd = [@phantomjs.path, @rasterizeScript, '"'+url+'"', outputFile, width, height]
+        @q.ninvoke(@child_process, 'exec', cmd.join(' '))
+        .then -> @q.ninvoke(@fs,'exists',outputFile)
+        .then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}."
 
 class ImageUploaderInterface
 
@@ -12,7 +39,7 @@ class ImageUploaderInterface
       @return Promise<HttpResponse>
     ###
     upload: (filepath, filename)->
-        throw "must me overriden"
+        throw "must me overloaded"
 
 ###
 @class FreeImageUploader
@@ -63,9 +90,6 @@ class CaptureService
         .then (url)->if url then {url, id}
 
 
-error =
-    FileNotFoundError: class extends Error
-    HttpRequestError: class extends Error
 
 ### configuration ###
 
@@ -84,7 +108,6 @@ c = new Pimple
     defaultImageFile: process.env.SCREENSHOT_DEFAULT_IMAGE_URL
     CAPTURE_TASK_ID: 'captureUrlTask'
     port: process.env.PORT || process.env.NODE_POST || 4000
-    error:error
 
 
 ### require libraries ###
@@ -112,12 +135,8 @@ c.set 'captureJobQueue', c.share (c)->
         console.log('captureQueue error', arguments)
     return captureQueue
 
-c.set 'rasterize', c.share (c)->
-    ### rasterize url ###
-    (url, outputFile = c.defaultOutputFile, width = 320, height = 240)->
-        cmd = [c.phantomjs.path, c.rasterizeScript, '"'+url+'"', outputFile, width, height]
-        c.q.ninvoke(c.child_process, 'exec', cmd.join(' '))
-
+c.set 'rasterizer', c.share (c)->
+    new Rasterizer(c.q,c.fs,c.child_process,c.phantomjs,c.rasterizeScript,c.defaultOutputFile)
 
 c.set 'uploader', c.share (c)->
     new FreeImageUploader(c.q, c['form-data'], c.fs, c.remoteScriptUrl, c.remoteScriptToken)
@@ -158,11 +177,11 @@ c.set 'app', c.share (c)->
                     res.redirect(301, cdnUrl + "#{capture.id}.#{imageExtension}")
                 else
                     res.redirect(defaultImageFile)
-                    q.ninvoke captureJobQueue, 'submitJob', CAPTURE_TASK_ID, {
+                    jobOptions=
                         resourceId:req.query.url,
-                        params: {url: req.query.url}}
-                    , (err)->
-                        console.log('task result',arguments)
+                        params: {url: req.query.url}
+                    captureJobQueue.submitJob CAPTURE_TASK_ID,jobOptions,(err)->
+                        if err then console.log("task for #{req.query.url} has error",err)
             .catch (err)->
                 err.status = 500
                 console.log(err)

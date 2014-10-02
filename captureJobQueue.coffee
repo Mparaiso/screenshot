@@ -6,7 +6,7 @@ path,
 tempDir,
 uploader,
 Capture,
-rasterize,
+rasterizer,
 error}=c
 module.exports =
     id: CAPTURE_TASK_ID
@@ -15,7 +15,7 @@ module.exports =
         id = md5(params.url)
         filename = id + '.' + imageExtension
         filePath = path.join tempDir, filename
-        rasterize(params.url, filePath)
+        rasterizer.rasterize(params.url, filePath)
         .then ->
             console.log('upload file', filePath);
             uploader.upload(filePath, filename)
