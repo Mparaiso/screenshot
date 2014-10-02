@@ -117,7 +117,7 @@ c.set 'rasterize', c.share (c)->
     (url, outputFile = c.defaultOutputFile, width = 320, height = 240)->
         cmd = [c.phantomjs.path, c.rasterizeScript, '"'+url+'"', outputFile, width, height]
         c.q.ninvoke(c.child_process, 'exec', cmd.join(' '))
-        .then (r)-> console.log(r);r
+
 
 c.set 'uploader', c.share (c)->
     new FreeImageUploader(c.q, c['form-data'], c.fs, c.remoteScriptUrl, c.remoteScriptToken)
@@ -158,7 +158,10 @@ c.set 'app', c.share (c)->
                     res.redirect(301, cdnUrl + "#{capture.id}.#{imageExtension}")
                 else
                     res.redirect(defaultImageFile)
-                    q.ninvoke captureJobQueue, 'submitJob', CAPTURE_TASK_ID, {params: {url: req.query.url}}, (err)->
+                    q.ninvoke captureJobQueue, 'submitJob', CAPTURE_TASK_ID, {
+                        resourceId:req.query.url,
+                        params: {url: req.query.url}}
+                    , (err)->
                         console.log('task result',arguments)
             .catch (err)->
                 err.status = 500
