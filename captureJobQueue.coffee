@@ -20,10 +20,10 @@ module.exports =
         .then ->
             console.log('upload file', filePath);
             uploader.upload(filePath, filename)
-        .then (r)->
-            if r.statusCode isnt 200 then throw "error #{r.statusCode}" else
+        .then (http_response)->
+            if http_response.statusCode isnt 200 then throw "error #{http_response.statusCode}" else
                 console.log "file #{filename} uploaded to #{cdnUrl + filename}"
-                return r
+                return http_response
         .then -> Capture.createFromUrl(params.url)
         .then -> cb()
         .catch (err)-> console.log('job error',err);cb(err)

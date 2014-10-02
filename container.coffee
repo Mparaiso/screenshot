@@ -27,14 +27,17 @@ class Rasterizer extends RasterizerInterface
     rasterize:(url, outputFile = @defaultOutputFile, width = 320, height = 240)->
         cmd = [@phantomjs.path, @rasterizeScript, '"'+url+'"', outputFile, width, height]
         @q.ninvoke(@child_process, 'exec', cmd.join(' '))
-        .then => @fileExists(outputFile)
-        #.then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}." else file_exists
-    fileExists:(filepath)->
+        .then => @_fileExists(outputFile)
+
+    ###
+        @return Promise
+    ###
+    _fileExists:(filepath)->
         deferred = @q.defer()
-        @fs.exists(filepath,(exists)->
+        @fs.exists filepath,(exists)->
             if exists then deferred.resolve(exists) else deferred.reject("#{filepath} doesnt exist")
-        )
         deferred.promise
+
 class ImageUploaderInterface
 
     ###
