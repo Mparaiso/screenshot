@@ -26,4 +26,4 @@ module.exports =
                 return r
         .then -> Capture.createFromUrl(params.url)
         .then -> cb()
-        .catch (err)-> console.log('error',err);cb(err)
+        .catch (err)-> console.log('job error',err,err.stack);cb(err)
