@@ -17,26 +17,24 @@ if (!module.parent) {
         } else {
             // Workers can share any TCP connection
             // In this case its a HTTP server
-            require('http').createServer(container.app).listen(container.port, function () {
-                console.log('listening on port ' + container.port);
-                container.captureJobQueue.start();
-                container.captureJobQueue.on('error', function (err) {
-                    console.log('captureQueue error', err, err.stack)
-                });
-                console.log('captureJobQueue has started');
-            });
+            require('http').createServer(container.app).listen(container.port, onServerListening);
         }
     } else {
-        require('http').createServer(container.app).listen(container.port, function () {
-            console.log('listening on port ' + container.port);
-            container.captureJobQueue.start();
-            console.log('captureJobQueue has started');
-            process.on('exit', function (code) {
-                container.redisClient.quit();
-                console.log('closing redis connection');
-            });
-        });
+        require('http').createServer(container.app).listen(container.port, onServerListening);
     }
 } else {
     module.exports = container;
+}
+
+function onServerListening() {
+    console.log('listening on port ' + container.port);
+    container.captureJobQueue.start();
+    container.captureJobQueue.on('error', function (err) {
+        console.log('captureQueue error', err, err.stack)
+    });
+    console.log('captureJobQueue has started');
+    process.on('exit', function (code) {
+        container.redisClient.quit();
+        console.log('closing redis connection');
+    });
 }
