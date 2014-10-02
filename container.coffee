@@ -181,7 +181,7 @@ c.set 'app', c.share (c)->
                         resourceId:req.query.url,
                         params: {url: req.query.url}
                     captureJobQueue.submitJob CAPTURE_TASK_ID,jobOptions,(err)->
-                        if err then console.log("task for #{req.query.url} has error",err)
+                        if err then console.log("task for #{req.query.url} has error",err) else console.log(err)
             .catch (err)->
                 err.status = 500
                 console.log(err)
