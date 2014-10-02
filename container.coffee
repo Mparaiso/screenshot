@@ -28,7 +28,7 @@ class Rasterizer extends RasterizerInterface
         cmd = [@phantomjs.path, @rasterizeScript, '"'+url+'"', outputFile, width, height]
         @q.ninvoke(@child_process, 'exec', cmd.join(' '))
         .then -> @q.ninvoke(@fs,'exists',outputFile)
-        .then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}."
+        .then (file_exists)-> if not file_exists then throw "#{outputFile} was not created from url #{url}." else file_exists
 
 class ImageUploaderInterface
 
