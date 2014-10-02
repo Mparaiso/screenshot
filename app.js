@@ -28,6 +28,10 @@ if (!module.parent) {
             console.log('listening on port ' + container.port);
             container.captureJobQueue.start();
             console.log('captureJobQueue has started');
+            process.on('exit', function(code) {
+                container.redisClient.quit();
+                console.log('closing redis connection');
+            });
         });
     }
 } else {
